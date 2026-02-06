@@ -1,6 +1,32 @@
 import argparse
+import ast
+import re
+import numpy as np
 from core import md5_to_seed, generate_waves, generate_keywaves, encode_message_wave, decode_message_wave
 from plot import plot_sine_waves
+
+
+def parse_ciphertext(text: str) -> np.ndarray:
+    """
+    Parse ciphertext provided as a numpy-like array string or a comma-separated list.
+    Examples: "[1 2 3]", "[1, 2, 3]", "1 2 3".
+    """
+    try:
+        value = ast.literal_eval(text)
+        if isinstance(value, (list, tuple, np.ndarray)):
+            return np.array(value, dtype=float)
+    except Exception:
+        pass
+
+    cleaned = text.strip().strip("[]").replace(",", " ")
+    arr = np.fromstring(cleaned, sep=" ")
+    if arr.size:
+        return arr
+
+    nums = re.findall(r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?", text)
+    if not nums:
+        raise ValueError("Ciphertext must be a list/array of numbers.")
+    return np.array([float(n) for n in nums], dtype=float)
 
 def main():
     parser = argparse.ArgumentParser(description="SinMix Waveform Cipher")
@@ -18,8 +44,7 @@ def main():
     else:
         if not args.ciphertext:
             raise ValueError("Decryption requires --ciphertext")
-        # Expecting list-like string: b'[float,...]'
-        data = eval(args.ciphertext)
+        data = parse_ciphertext(args.ciphertext)
 
     seed = md5_to_seed(args.password)
     print(f"Seed: {seed}")
@@ -40,7 +65,11 @@ def main():
     else:
         decrypted = decode_message_wave(data, key_wave)
         print("Decrypted message:")
-        print(decrypted.decode("utf-8"))
+        try:
+            print(decrypted.decode("utf-8"))
+        except UnicodeDecodeError:
+            print(decrypted.decode("utf-8", errors="replace"))
+            print("(Note: output contained non-UTF8 bytes)")
         plot_sine_waves(key_waves, seed, encrypted_wave=data, length=len(data), smooth_factor=20)
 
 if __name__ == "__main__":
