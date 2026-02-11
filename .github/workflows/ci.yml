@@ -21,7 +21,8 @@ jobs:
           python -m pip install pytest numpy matplotlib
       - name: Run tests
         env:
-          PYTHONPATH: ${{ github.workspace }}
+          # set PYTHONPATH to repo root parent so imports like sincrypt.py.* resolve
+          PYTHONPATH: ${{ github.workspace }}/..
         run: |
           # prefer a project venv if present, otherwise run pytest with PYTHONPATH set
           if [ -x ./venv/bin/pytest ]; then
