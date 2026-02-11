@@ -8,9 +8,10 @@ from plot import plot_sine_waves
 
 def parse_ciphertext(text: str) -> np.ndarray:
     """
-    Parse ciphertext provided as a numpy-like array string or a comma-separated list.
-    Examples: "[1 2 3]", "[1, 2, 3]", "1 2 3".
+    Parse ciphertext provided as a numpy-like array string, a comma-separated list,
+    or encoded hex/base64 of a comma-separated float list.
     """
+    # Try literal eval / numeric list first
     try:
         value = ast.literal_eval(text)
         if isinstance(value, (list, tuple, np.ndarray)):
@@ -18,6 +19,36 @@ def parse_ciphertext(text: str) -> np.ndarray:
     except Exception:
         pass
 
+    # Try base64 or hex-encoded serialized comma list
+    import base64, binascii
+    try:
+        # try base64
+        decoded = base64.b64decode(text, validate=True)
+        try:
+            s = decoded.decode('utf-8')
+            cleaned = s.strip().strip("[]").replace(",", " ")
+            arr = np.fromstring(cleaned, sep=" ")
+            if arr.size:
+                return arr
+        except Exception:
+            pass
+    except Exception:
+        pass
+    try:
+        # try hex
+        raw = binascii.unhexlify(text)
+        try:
+            s = raw.decode('utf-8')
+            cleaned = s.strip().strip("[]").replace(",", " ")
+            arr = np.fromstring(cleaned, sep=" ")
+            if arr.size:
+                return arr
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    # Try plain numeric string parsing
     cleaned = text.strip().strip("[]").replace(",", " ")
     arr = np.fromstring(cleaned, sep=" ")
     if arr.size:
