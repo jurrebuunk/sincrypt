@@ -35,6 +35,7 @@ def main():
     parser.add_argument("-m", "--message")
     parser.add_argument("-c", "--ciphertext")
     parser.add_argument("-w", "--waves", type=int, default=3, help="Number of key waves")
+    parser.add_argument("--out-format", choices=["raw","hex","base64"], default="raw", help="Output format for ciphertext when encrypting")
     parser.add_argument("--visualize", dest="visualize", action="store_true", help="Show sinewave visualizer (default: enabled)")
     parser.add_argument("--no-visualize", dest="visualize", action="store_false", help="Disable sinewave visualizer")
     parser.set_defaults(visualize=True)
@@ -61,8 +62,20 @@ def main():
 
     if args.mode == "encrypt":
         encrypted_wave = encode_message_wave(data, key_wave)
-        print("Encrypted wave:")
-        print(encrypted_wave)
+        # Prepare output according to requested format
+        if args.out_format == "raw":
+            print("Encrypted wave:")
+            print(encrypted_wave)
+        else:
+            # Serialize as comma-separated floats string, then encode
+            s = ",".join(map(str, encrypted_wave.tolist()))
+            if args.out_format == "hex":
+                import binascii
+                out = binascii.hexlify(s.encode("utf-8")).decode("ascii")
+            else:  # base64
+                import base64
+                out = base64.b64encode(s.encode("utf-8")).decode("ascii")
+            print(out)
         if args.visualize:
             plot_sine_waves(key_waves, seed, encrypted_wave, length=len(data), smooth_factor=20)
 
