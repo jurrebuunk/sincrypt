@@ -1,7 +1,8 @@
 import subprocess, json
 from pathlib import Path
-VE = Path.cwd() / 'venv' / 'bin' / 'python'
-CLI = VE.as_posix() + ' py/cli.py'
+# locate project venv relative to this test file
+VE = (Path(__file__).resolve().parents[1] / 'venv' / 'bin' / 'python')
+CLI = VE.as_posix() + ' ' + (Path(__file__).resolve().parents[1] / 'py' / 'cli.py').as_posix()
 
 def run(cmd):
     p = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -14,12 +15,13 @@ def test_encrypt_base64_and_decrypt():
     assert rc == 0
     # out should be base64 string
     import base64
-    decoded = base64.b64decode(out)
+    decoded = base64.b64decode(out.splitlines()[-1])
     # parsed should be comma-separated floats
     s = decoded.decode('utf-8')
     assert ',' in s
     # now decrypt using that base64 as ciphertext
-    rc2,out2,err2 = run(f"{CLI} decrypt -p testpw -c '{out}' --no-visualize")
+    b64 = out.splitlines()[-1]
+    rc2,out2,err2 = run(f"{CLI} decrypt -p testpw -c '{b64}' --no-visualize")
     assert rc2 == 0
     assert 'Decrypted message:' in out2
     assert 'hi' in out2
