@@ -1,8 +1,9 @@
 import subprocess, json
 from pathlib import Path
-# locate project venv relative to this test file
-VE = (Path(__file__).resolve().parents[1] / 'venv' / 'bin' / 'python')
-CLI = VE.as_posix() + ' ' + (Path(__file__).resolve().parents[1] / 'py' / 'cli.py').as_posix()
+# Use the same python executable that's running the tests (works in CI and locally)
+import sys
+PY = Path(sys.executable)
+CLI = PY.as_posix() + ' ' + (Path(__file__).resolve().parents[1] / 'py' / 'cli.py').as_posix()
 
 def run(cmd):
     p = subprocess.run(cmd, shell=True, capture_output=True, text=True)
