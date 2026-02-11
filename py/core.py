@@ -40,10 +40,10 @@ def encode_message_wave(message: bytes, key_wave: np.ndarray) -> np.ndarray:
     Encode message into 4th wave with scaling.
     Message bytes (0-255) are converted to -1..1 and added to key_wave.
     """
-    # Ensure message is uint8 array
-    message_arr = np.frombuffer(message, dtype=np.uint8)
+    # Ensure message is read as numeric values (avoid uint8 underflow)
+    message_arr = np.frombuffer(message, dtype=np.uint8).astype(np.float64)
     # Scale to roughly -1..1
-    msg_scaled = (message_arr - 128) / 128.0
+    msg_scaled = (message_arr - 128.0) / 128.0
     encrypted_wave = key_wave + msg_scaled
     return encrypted_wave
 
@@ -53,5 +53,6 @@ def decode_message_wave(encrypted_wave: np.ndarray, key_wave: np.ndarray) -> byt
     Reverse the scaling.
     """
     msg_scaled = encrypted_wave - key_wave
-    message = np.clip(np.round((msg_scaled * 128) + 128), 0, 255).astype(np.uint8)
+    # Use rint for deterministic rounding of floats to nearest integer
+    message = np.clip(np.rint((msg_scaled * 128.0) + 128.0), 0, 255).astype(np.uint8)
     return message.tobytes()
