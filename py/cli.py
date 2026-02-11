@@ -35,6 +35,9 @@ def main():
     parser.add_argument("-m", "--message")
     parser.add_argument("-c", "--ciphertext")
     parser.add_argument("-w", "--waves", type=int, default=3, help="Number of key waves")
+    parser.add_argument("--visualize", dest="visualize", action="store_true", help="Show sinewave visualizer (default: enabled)")
+    parser.add_argument("--no-visualize", dest="visualize", action="store_false", help="Disable sinewave visualizer")
+    parser.set_defaults(visualize=True)
     args = parser.parse_args()
 
     if args.mode == "encrypt":
@@ -60,7 +63,8 @@ def main():
         encrypted_wave = encode_message_wave(data, key_wave)
         print("Encrypted wave:")
         print(encrypted_wave)
-        plot_sine_waves(key_waves, seed, encrypted_wave, length=len(data), smooth_factor=20)
+        if args.visualize:
+            plot_sine_waves(key_waves, seed, encrypted_wave, length=len(data), smooth_factor=20)
 
     else:
         decrypted = decode_message_wave(data, key_wave)
@@ -70,7 +74,8 @@ def main():
         except UnicodeDecodeError:
             print(decrypted.decode("utf-8", errors="replace"))
             print("(Note: output contained non-UTF8 bytes)")
-        plot_sine_waves(key_waves, seed, encrypted_wave=data, length=len(data), smooth_factor=20)
+        if args.visualize:
+            plot_sine_waves(key_waves, seed, encrypted_wave=data, length=len(data), smooth_factor=20)
 
 if __name__ == "__main__":
     main()
