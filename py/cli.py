@@ -67,6 +67,7 @@ def main():
     parser.add_argument("-c", "--ciphertext")
     parser.add_argument("-w", "--waves", type=int, default=3, help="Number of key waves")
     parser.add_argument("--out-format", choices=["raw","hex","base64"], default="raw", help="Output format for ciphertext when encrypting")
+    parser.add_argument("--copy", dest="copy", action="store_true", help="Copy ciphertext to clipboard when encrypting (requires pyperclip)")
     parser.add_argument("--visualize", dest="visualize", action="store_true", help="Show sinewave visualizer (default: enabled)")
     parser.add_argument("--no-visualize", dest="visualize", action="store_false", help="Disable sinewave visualizer")
     parser.set_defaults(visualize=True)
@@ -107,6 +108,27 @@ def main():
                 import base64
                 out = base64.b64encode(s.encode("utf-8")).decode("ascii")
             print(out)
+            if args.copy:
+                # try to copy to clipboard
+                try:
+                    import pyperclip
+                    pyperclip.copy(out)
+                    print("(copied to clipboard)")
+                except Exception:
+                    import subprocess, sys
+                    try:
+                        if sys.platform == 'darwin':
+                            p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+                            p.communicate(out.encode('utf-8'))
+                            print("(copied to clipboard via pbcopy)")
+                        elif sys.platform.startswith('linux'):
+                            p = subprocess.Popen(['xclip','-selection','clipboard'], stdin=subprocess.PIPE)
+                            p.communicate(out.encode('utf-8'))
+                            print("(copied to clipboard via xclip)")
+                        else:
+                            print("(clipboard copy not supported on this platform)")
+                    except Exception:
+                        print("(failed to copy to clipboard)")
         if args.visualize:
             plot_sine_waves(key_waves, seed, encrypted_wave, length=len(data), smooth_factor=20)
 
