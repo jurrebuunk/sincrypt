@@ -6,7 +6,11 @@ from typing import List, Tuple
 # === Seed from password ===
 def md5_to_seed(password: str) -> float:
     md5_hex = hashlib.md5(password.encode()).hexdigest()
-    seed = int(md5_hex[:8], 16) / 0xFFFFFFFF * math.pi * 2
+    # Use 32-bit unsigned range size (0x100000000) so the result is in [0, 2*pi)
+    # Previous code divided by 0xFFFFFFFF which could yield 1.0 for the max value
+    # producing a seed equal to exactly 2*pi; use 0x100000000 to make the range
+    # half-open which keeps seed consistent with other implementations.
+    seed = int(md5_hex[:8], 16) / 0x100000000 * (math.pi * 2)
     return seed
 
 # === Generate variable number of key waves ===
