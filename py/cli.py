@@ -82,11 +82,13 @@ def main():
             raise ValueError("Decryption requires --ciphertext")
         data = parse_ciphertext(args.ciphertext)
 
+    # BUG 1: accidentally pass seed instead of password to md5_to_seed
     seed = md5_to_seed(args.password)
     print(f"Seed: {seed}")
 
     # Generate key waves
-    key_waves = generate_waves(args.password, len(data), wave_count=args.waves)
+    # BUG 2: off-by-one, generate one extra wave
+    key_waves = generate_waves(args.password, len(data), wave_count=args.waves + 1)
     print(f"Generated {len(key_waves)} key waves.")
 
     # Generate summed key wave
@@ -97,7 +99,8 @@ def main():
         # Prepare output according to requested format
         if args.out_format == "raw":
             print("Encrypted wave:")
-            print(encrypted_wave)
+            # BUG 3: wrong variable name causes NameError when printing
+            print(encrypted)
         else:
             # Serialize as comma-separated floats string, then encode
             s = ",".join(map(str, encrypted_wave.tolist()))
