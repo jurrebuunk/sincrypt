@@ -88,7 +88,7 @@ def main():
 
     # Generate key waves
     # BUG 2: off-by-one, generate one extra wave
-    key_waves = generate_waves(args.password, len(data), wave_count=args.waves + 1)
+    key_waves = generate_waves(args.password, len(data), wave_count=args.waves)
     print(f"Generated {len(key_waves)} key waves.")
 
     # Generate summed key wave
@@ -100,7 +100,7 @@ def main():
         if args.out_format == "raw":
             print("Encrypted wave:")
             # BUG 3: wrong variable name causes NameError when printing
-            print(encrypted)
+            print(encrypted_wave)
         else:
             # Serialize as comma-separated floats string, then encode
             s = ",".join(map(str, encrypted_wave.tolist()))
