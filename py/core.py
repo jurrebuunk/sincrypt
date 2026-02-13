@@ -24,10 +24,12 @@ def generate_waves(password: str, length: int, wave_count: int = 3) -> List[Tupl
     base = hashlib.md5(((password + ":" + str(length)) * repeat).encode()).digest() * repeat
 
     waves = []
+    blen = len(base)
     for i in range(wave_count):
-        amp = (base[i] / 255.0) + 0.5
-        freq = base[i + wave_count] / 64.0
-        phase = (base[i + wave_count*2] / 255.0) * math.pi*2
+        # use modulo indexing to avoid off-by-one when wave_count*2 >= len(base)
+        amp = (base[(i) % blen] / 255.0) + 0.5
+        freq = base[(i + wave_count) % blen] / 64.0
+        phase = (base[(i + wave_count*2) % blen] / 255.0) * math.pi*2
         waves.append((amp, freq, phase))
     return waves
 
